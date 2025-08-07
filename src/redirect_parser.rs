@@ -28,11 +28,6 @@ pub fn build_redirect_targets(
     let decoder = GzDecoder::new(pb_reader);
     let decompressed_reader = BufReader::with_capacity(128 * 1024, decoder);
 
-    // Read entire decompressed content into a String
-    // let mut decompressed = String::new();
-    // decoder.read_to_string(&mut decompressed)?;
-    // println!("Decompressed len {}", decompressed.len());
-
     // (10 -> page_id,0 -> main namespace,'Computer_accessibility' -> redirect_target
     let tuple_re = Regex::new(r"\((\d+),0,'((?:[^'\\]|\\.)*)'").unwrap();
 

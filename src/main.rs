@@ -16,6 +16,7 @@ mod search; // This is important!
 
 use std::cmp::Reverse;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::atomic::AtomicUsize;
 use std::time::Duration;
 use std::time::Instant;
@@ -58,6 +59,9 @@ struct Args {
 
     #[arg(long)]
     benchmark: bool,
+
+    #[arg(long)]
+    print_benchmark: Option<PathBuf>,
 
     /// Port for the API server
     #[arg(short, long, default_value_t = 3000)]
@@ -160,16 +164,13 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let now = Instant::now();
 
+    if let Some(path) = &args.print_benchmark {
+        let dense_id_to_title = Arc::new(load_dense_id_to_title_mmap()?);
+        print_top_paths(path.to_str().unwrap(), dense_id_to_title.clone(), 200)?;
+
+        return Ok(());
+    }
     if args.benchmark {
-        // let dense_id_to_title = Arc::new(load_dense_id_to_title_mmap()?);
-        // print_top_paths(
-        //     "results/top_paths_1756748771.bin",
-        //     dense_id_to_title.clone(),
-        //     200,
-        // )?;
-
-        // return Ok(());
-
         let num_threads = num_cpus::get(); // logical cores
         println!("running on {} threads", num_threads);
         let filename = run_bfs_worker(num_threads, 10000, 5 * num_threads * 10000)?;
@@ -400,12 +401,14 @@ pub fn run_bfs_worker(
         let bfs_count = bfs_counts.clone();
         let handle = thread::spawn(move || {
             let mut heap: BinaryHeap<Reverse<(u8, u32, u32)>> = BinaryHeap::new();
+            // let mut heap: BinaryHeap<Reverse<(usize, u32, u32)>> = BinaryHeap::new();
             let mut rng = rand::rng();
             while !stop.load(Ordering::Relaxed) {
                 let start = rng.random_range(0..graph.num_nodes()) as u32;
                 let goal = rng.random_range(0..graph.num_nodes()) as u32;
 
                 if let Some(depth) = bi_bfs_csr_depth_only(&*graph, start, goal) {
+                    // if let Some(depth) = Some(bi_bfs_count_shortest_paths(&*graph, start, goal)) {
                     let rev_item = Reverse((depth, start, goal));
                     if heap.len() < top_k {
                         heap.push(rev_item);
@@ -434,6 +437,7 @@ pub fn run_bfs_worker(
 
     // Wait for threads and collect their heaps
     let mut global_heap: BinaryHeap<Reverse<(u8, u32, u32)>> = BinaryHeap::new();
+    // let mut global_heap: BinaryHeap<Reverse<(usize, u32, u32)>> = BinaryHeap::new();
     for (i, handle) in handles.into_iter().enumerate() {
         let local_heap = handle.join().unwrap();
         for rev_item in local_heap {
@@ -462,6 +466,7 @@ pub fn run_bfs_worker(
 
     // Count per depth
     let mut depth_counts: FxHashMap<u8, usize> = FxHashMap::default();
+    // let mut depth_counts: FxHashMap<usize, usize> = FxHashMap::default();
     for &Reverse((depth, _start, _goal)) in global_heap.iter() {
         *depth_counts.entry(depth).or_insert(0) += 1;
     }
@@ -469,18 +474,22 @@ pub fn run_bfs_worker(
     let mut depths: Vec<_> = depth_counts.keys().cloned().collect();
     depths.sort_unstable_by(|a, b| b.cmp(a));
     for depth in depths {
-        println!("Depth {}: {}", depth, depth_counts[&depth]);
+        // println!("Depth {}: {}", depth, depth_counts[&depth]);
+        println!("paths {}: {}", depth, depth_counts[&depth]);
     }
 
     // Save to file
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let filename = format!("results/top_paths_{}.bin", timestamp);
     let vec_to_save: Vec<(u8, u32, u32)> = global_heap.into_iter().map(|Reverse(t)| t).collect();
+    // let vec_to_save: Vec<(usize, u32, u32)> = global_heap.into_iter().map(|Reverse(t)| t).collect();
     util::save_to_file(&vec_to_save, &filename)?;
-    println!("Saved global heap to {}", filename);
+    // println!("Saved global heap to {}", filename);
 
     Ok(filename)
 }
+
+// TODO. JUST MAKE A SEPARATE DEPTH COUNTER WORKER?
 
 pub fn print_top_paths(
     path: &str,
@@ -489,6 +498,7 @@ pub fn print_top_paths(
 ) -> anyhow::Result<()> {
     // Load the saved vector from file
     let mut paths: Vec<(u8, u32, u32)> = util::load_from_file(path)?;
+    // let mut paths: Vec<(usize, u32, u32)> = util::load_from_file(path)?;
 
     // Sort by depth descending
     paths.sort_unstable_by(|a, b| b.0.cmp(&a.0));

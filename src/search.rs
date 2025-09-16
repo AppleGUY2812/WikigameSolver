@@ -699,6 +699,117 @@ where
 
 use std::collections::HashSet;
 
+pub fn bi_bfs_count_shortest_paths<G>(graph: &G, start: u32, goal: u32) -> usize
+where
+    G: CsrGraphTrait,
+{
+    if start == goal {
+        return 1;
+    }
+
+    // --- State for the forward search ---
+    // We now store distance to ensure we only count shortest paths.
+    let mut dist_fwd: FxHashMap<u32, u32> = FxHashMap::default();
+    let mut count_fwd: FxHashMap<u32, usize> = FxHashMap::default();
+    let mut queue_fwd: VecDeque<u32> = VecDeque::new();
+
+    dist_fwd.insert(start, 0);
+    count_fwd.insert(start, 1);
+    queue_fwd.push_back(start);
+
+    // --- State for the backward search ---
+    let mut dist_bwd: FxHashMap<u32, u32> = FxHashMap::default();
+    let mut count_bwd: FxHashMap<u32, usize> = FxHashMap::default();
+    let mut queue_bwd: VecDeque<u32> = VecDeque::new();
+
+    dist_bwd.insert(goal, 0);
+    count_bwd.insert(goal, 1);
+    queue_bwd.push_back(goal);
+
+    let mut total_paths = 0;
+    // Keep track of the shortest path length found so far.
+    let mut shortest_path_len = u32::MAX;
+
+    while !queue_fwd.is_empty() && !queue_bwd.is_empty() {
+        // Stop exploring if the combined current depth exceeds the shortest path found.
+        let current_depth_sum =
+            dist_fwd[queue_fwd.front().unwrap()] + dist_bwd[queue_bwd.front().unwrap()];
+        if current_depth_sum >= shortest_path_len {
+            break;
+        }
+
+        // Pick the smaller frontier to expand
+        if queue_fwd.len() <= queue_bwd.len() {
+            // --- Expand Forward ---
+            let level_size = queue_fwd.len();
+            for _ in 0..level_size {
+                let node = queue_fwd.pop_front().unwrap();
+                let d_node = dist_fwd[&node];
+                let paths_to_node = count_fwd[&node];
+
+                // Check for meeting point before expanding
+                if let Some(d_bwd) = dist_bwd.get(&node) {
+                    let path_len = d_node + d_bwd;
+                    if path_len < shortest_path_len {
+                        shortest_path_len = path_len;
+                        total_paths = 0; // Found a new, shorter path
+                    }
+                    if path_len == shortest_path_len {
+                        total_paths += paths_to_node * count_bwd[&node];
+                    }
+                }
+
+                for &neighbor in graph.get(node) {
+                    // Case 1: First time seeing this neighbor.
+                    if !dist_fwd.contains_key(&neighbor) {
+                        dist_fwd.insert(neighbor, d_node + 1);
+                        count_fwd.insert(neighbor, paths_to_node);
+                        queue_fwd.push_back(neighbor);
+                    }
+                    // Case 2: Found another path of the SAME shortest length.
+                    else if dist_fwd[&neighbor] == d_node + 1 {
+                        *count_fwd.get_mut(&neighbor).unwrap() += paths_to_node;
+                    }
+                }
+            }
+        } else {
+            // --- Expand Backward ---
+            let level_size = queue_bwd.len();
+            for _ in 0..level_size {
+                let node = queue_bwd.pop_front().unwrap();
+                let d_node = dist_bwd[&node];
+                let paths_to_node = count_bwd[&node];
+
+                // Check for meeting point before expanding
+                if let Some(d_fwd) = dist_fwd.get(&node) {
+                    let path_len = d_node + d_fwd;
+                    if path_len < shortest_path_len {
+                        shortest_path_len = path_len;
+                        total_paths = 0; // Found a new, shorter path
+                    }
+                    if path_len == shortest_path_len {
+                        total_paths += paths_to_node * count_fwd[&node];
+                    }
+                }
+
+                for &neighbor in graph.get_reverse(node) {
+                    // Case 1: First time seeing this neighbor.
+                    if !dist_bwd.contains_key(&neighbor) {
+                        dist_bwd.insert(neighbor, d_node + 1);
+                        count_bwd.insert(neighbor, paths_to_node);
+                        queue_bwd.push_back(neighbor);
+                    }
+                    // Case 2: Found another path of the SAME shortest length.
+                    else if dist_bwd[&neighbor] == d_node + 1 {
+                        *count_bwd.get_mut(&neighbor).unwrap() += paths_to_node;
+                    }
+                }
+            }
+        }
+    }
+
+    total_paths
+}
 fn paths_to_strings(
     paths: &Vec<Vec<u32>>,
     id_to_title: &FxHashMap<u32, String>,

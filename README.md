@@ -70,6 +70,8 @@ To perform random searches for long paths, run:
 cargo run --release -- --benchmark
 ```
 
+It will do a minimal version of the search on 2 random pages and returns the path's length. It saves the longest paths it finds. On my computer I can get 12000 searches per second on 8 threads.
+
 Press `Enter` to stop, at which point the results will be saved:
 
 ```text

@@ -114,6 +114,19 @@ You can print benchmark results from a saved file with:
 cargo run --release -- --print-benchmark results/top_paths_1757718671.bin
 ```
 
+Output:
+
+```text
+Top 200 paths from file results/top_paths_1758054160.bin:
+1. Depth 34: Two_Harbour_Green -> Billboard_Top_Hits:_1993
+2. Depth 34: Diego_Daldosso -> 1884_Missouri_State_Auditor_election
+3. Depth 33: Wendy_Williams:_What_a_Mess! -> 1880_Missouri_Secretary_of_State_election
+4. Depth 31: Levantine_mansions_of_İzmir -> Billboard_Top_Hits:_1990
+5. Depth 28: Jud_Conlon -> 1874_Missouri_State_Treasurer_election
+6. Depth 23: Adobe_Photoshop_Lightroom_Classic_12.2_(Windows) -> 1896_Missouri_State_Treasurer_election
+...
+```
+
 > The server is primarily a webserver, but the bidirectional BFS function can be used standalone.
 
 # 🗂️ Preparing the Data

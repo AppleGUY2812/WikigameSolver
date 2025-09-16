@@ -72,6 +72,8 @@ cargo run --release -- --benchmark
 
 It will do a minimal version of the search on 2 random pages and returns the path's length. It saves the longest paths it finds. On my computer I can get 12000 searches per second on 8 threads.
 
+If you would like a version to find paths with a large number of paths, you can ask in an issue.
+
 Press `Enter` to stop, at which point the results will be saved:
 
 ```text

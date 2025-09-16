@@ -30,20 +30,6 @@ If you want to run the webserver (the default option), you can run this. (the st
 RUST_LOG=debug,tracing_sqlx=warn cargo run --release
 ```
 
-# Wiki Path Finder
-
-A Rust-based tool for exploring paths between Wikipedia pages using BFS search. Supports a web server mode for API queries and benchmarking mode for finding long paths.
-
----
-
-## Running the Web Server
-
-To start the web server (default option), run:
-
-```bash
-RUST_LOG=debug,tracing_sqlx=warn cargo run --release
-```
-
 Once running, you can make search queries against the API:
 
 ### Example Request
@@ -62,7 +48,7 @@ Once running, you can make search queries against the API:
 
 ---
 
-## Running Benchmark Mode
+## Running Benchmark
 
 To perform random searches for long paths, run:
 

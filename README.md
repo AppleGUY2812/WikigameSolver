@@ -2,11 +2,7 @@
 
 It's pretty fast in finding the shortest paths between Wikipedia articles.
 
-**Try it out!**
-
-- Visit [https://wikipathfinder.com/](https://wikipathfinder.com/)
-
-This repo serves the backend api of this website Github: [https://github.com/binkybarnes/WikigameSolverWeb](https://github.com/binkybarnes/WikigameSolverWeb)
+Frontend repo: [https://github.com/binkybarnes/WikigameSolverWeb](https://github.com/binkybarnes/WikigameSolverWeb)
 
 ---
 

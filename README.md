@@ -2,6 +2,8 @@
 
 It's pretty fast in finding the shortest paths between Wikipedia articles.
 
+**Try it live:** [wikigamesolver.pages.dev](https://wikigamesolver.pages.dev)
+
 Frontend repo: [https://github.com/binkybarnes/WikigameSolverWeb](https://github.com/binkybarnes/WikigameSolverWeb)
 
 ---
